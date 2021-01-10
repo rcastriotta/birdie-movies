@@ -50,21 +50,23 @@ const GetVideo = (props) => {
   }
 
   return (
-    <WebView
-      style={{ width: 500, height: 500 }}
-      ref={ref}
-      injectedJavaScriptBeforeContentLoaded={script}
-      onMessage={(event) => {
-        const data = event.nativeEvent.data.split('~')
-        const formattedData = [parseFloat(data[0]), data[1]]
+    <View>
+      <WebView
+        style={{ width: 500, height: 500 }}
+        ref={ref}
+        injectedJavaScriptBeforeContentLoaded={script}
+        onMessage={(event) => {
+          const data = event.nativeEvent.data.split('~')
+          const formattedData = [parseFloat(data[0]), data[1]]
 
-        // updates time every 10 seconds 
-        if (Math.abs(formattedData[0] - props.currentTime[0]) > 10) {
-          props.setCurrentTime(formattedData)
-        }
-      }}
-      source={{ uri: props.url.replace('\n', '') }}
-    />
+          // updates time every 10 seconds 
+          if (Math.abs(formattedData[0] - props.currentTime[0]) > 10) {
+            props.setCurrentTime(formattedData)
+          }
+        }}
+        source={{ uri: props.url.replace('\n', '') }}
+      />
+    </View>
 
   )
 }

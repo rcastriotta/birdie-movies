@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, SafeAreaView, StyleSheet, Image, ActivityIndicator } from 'react-native';
+import { View, Text, SafeAreaView, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import GetVideoData from './GetVideoData';
-import GetVideo from './GetVideo';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useDispatch } from 'react-redux'
 import * as stateActions from '../../store/actions/state';
@@ -80,12 +79,8 @@ const MovieDataScreen = ({ route, navigation }) => {
                 </View>
 
             </SafeAreaView>
-            {streamURL.length ? <React.Fragment>
-                <GetVideo play={showVideo} currentTime={currentTime} setCurrentTime={(time) => setCurrentTime(time)} url={streamURL} />
-            </React.Fragment> : <React.Fragment>
-                    <GetVideoData link={route.params.link} data={data} setData={(arr) => setData(arr)} setStream={(url) => setStreamURL(url)} />
-                </React.Fragment>
-            }
+            <GetVideoData setCurrentTime={(time) => setCurrentTime(time)} currentTime={currentTime} play={showVideo} link={route.params.link} data={data} setData={(arr) => setData(arr)} setStream={(url) => setStreamURL(url)} />
+
         </React.Fragment>
     )
 }
