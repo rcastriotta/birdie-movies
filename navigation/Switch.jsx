@@ -45,6 +45,7 @@ const Switch = () => {
       setCookie(cookie[0], cookie[1], 3)
     })
     window.ReactNativeWebView.postMessage('Done')
+    true
     `
 
     useEffect(() => {
@@ -68,7 +69,7 @@ const Switch = () => {
                 </View>
                 <View>
                     {cookies && <WebView
-                        injectedJavaScript={cookieScript}
+                        injectedJavaScriptBeforeContentLoaded={cookieScript}
                         source={{
                             uri: mediaState ? 'https://noxx.is/' : 'https://azm.to/'
                         }}

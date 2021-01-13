@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { FontAwesome5, FontAwesome } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
@@ -6,10 +6,38 @@ import { WebView } from 'react-native-webview';
 
 const ShowPicker = (props) => {
     const [activeTab, setActiveTab] = useState(1)
-    const [links, setLinks] = useState({
-        activeLink: null,
-        frameLink: null
-    })
+    const [link, setLink] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const ref = useRef(null)
+
+    const script = `
+        var e = document.querySelector(".resp-iframe");
+        let vid;
+        const checkExist = setInterval(function() {
+        if (e) {
+            vid = e.contentWindow.document.querySelector('#player')
+            const url = e.contentWindow.document.querySelector('#player > source').getAttribute('src')
+            if (url.includes('.mkv')) {
+                window.alert("Video can't be played")
+                window.ReactNativeWebView.postMessage('ERROR')
+                clearInterval(checkExist);
+                return
+            }
+            window.ReactNativeWebView.postMessage('LOADING')
+            vid.play()
+            vid.webkitEnterFullscreen()
+            vid.oncanplay = () => {
+            vid.currentTime = ${props.currentTime[0]}
+            }
+            vid.ontimeupdate = (event) => {
+                const percentage = vid.currentTime / vid.duration
+                window.ReactNativeWebView.postMessage(vid.currentTime + '~' + percentage)
+            };
+            clearInterval(checkExist);
+        }
+    }, 100)
+    `;
+
 
     const seasons = {}
     const data = props.data.split(',')
@@ -34,12 +62,21 @@ const ShowPicker = (props) => {
     const episodePressHandler = (obj) => {
 
         // set stream and active episode
-        props.reset(obj.link)
-        setLinks({ activeLink: null, frameLink: null })
-        props.setCurrentEpisode(obj)
-
-        // initialize webview
-        setLinks(prev => ({ ...prev, activeLink: obj.link }))
+        if (link !== obj.link) {
+            props.reset(obj.link)
+            props.setCurrentEpisode(obj)
+            setLink(null)
+            setLoading(true)
+            setLink(obj.link)
+        } else {
+            // inject javascript
+            if (ref.current) {
+                ref.current.injectJavaScript(`
+                vid.webkitEnterFullscreen()
+                vid.play()
+                `)
+            }
+        }
     }
 
     return (
@@ -66,28 +103,32 @@ const ShowPicker = (props) => {
                     </View>
                 )
             })}
-            {links.activeLink && <WebView
-                injectedJavaScript={getiFrameLink}
-                source={{ uri: `https://noxx.is${links.activeLink}` }}
+            {link && <View><WebView
+                ref={ref}
+                injectedJavaScript={script}
+                source={{ uri: `https://noxx.is${link}` }}
                 onShouldStartLoadWithRequest={handleRequests}
                 onMessage={(event) => {
-                    setLinks({
-                        activeLink: null,
-                        frameLink: event.nativeEvent.data
-                    })
+                    if (event.nativeEvent.data.includes('LOADING')) {
+                        setLoading(false)
+                        return
+                    } else if (event.nativeEvent.data.includes('ERROR')) {
+                        setLoading(false)
+                        setLink(null)
+                        return
+                    }
+
+                    const data = event.nativeEvent.data.split('~')
+                    const formattedData = [parseFloat(data[0]), data[1]]
+
+                    // updates time every 10 seconds 
+                    if (Math.abs(formattedData[0] - props.currentTime[0]) > 10) {
+                        props.setCurrentTime(formattedData)
+                    }
+
                 }}
-            />}
-            {links.frameLink && <WebView
-                style={{ width: 500 }}
-                injectedJavaScript={getLink}
-                source={{ uri: `https://noxx.is${links.frameLink}` }}
-                onShouldStartLoadWithRequest={handleRequests}
-                onMessage={(event) => {
-                    setLinks({ ...links, frameLink: null })
-                    props.setStreamURL(event.nativeEvent.data)
-                }}
-            />}
-            <Modal visible={links.activeLink || links.frameLink ? true : false} transparent={true}><View style={styles.backdrop}><ActivityIndicator size={'large'} /></View></Modal>
+            /></View>}
+            <Modal visible={loading} transparent={true}><View style={styles.backdrop}><ActivityIndicator size={'large'} /></View></Modal>
         </React.Fragment>
     )
 }
@@ -137,20 +178,5 @@ const styles = StyleSheet.create({
 
 export default ShowPicker;
 
-const getiFrameLink = `
-    const checkExist = setInterval(function() {
-      const url = document.querySelector('.resp-iframe').getAttribute('src')
 
-      if (url) {
-        window.ReactNativeWebView.postMessage(url)
-        clearInterval(checkExist);
-      }
-    }, 100)
-    `;
-
-const getLink = `
-        const el = document.querySelector('#player > source')
-        const url = el.getAttribute('src')
-        window.ReactNativeWebView.postMessage(url)
-    `
 

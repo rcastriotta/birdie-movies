@@ -100,12 +100,12 @@ const HomeScreen = ({ navigation }) => {
 
                 <View style={styles.newArrivals}>
                     <Text style={styles.sectionTitle}>{mediaState ? 'New Episodes' : 'New Arrivals'}</Text>
-                    <FlatList keyExtractor={item => item.link} horizontal data={newMedia} renderItem={renderItem} contentContainerStyle={{ paddingRight: 30 }} />
+                    <FlatList showsHorizontalScrollIndicator={false} keyExtractor={item => item.link} horizontal data={newMedia} renderItem={renderItem} contentContainerStyle={{ paddingRight: 30 }} />
                 </View>
 
                 <View style={styles.continueWatching}>
                     <Text style={styles.sectionTitle}>Continue Watching</Text>
-                    <FlatList keyExtractor={item => item.link} horizontal data={watchHistory} renderItem={renderItem} contentContainerStyle={{ paddingRight: 30 }} />
+                    <FlatList showsHorizontalScrollIndicator={false} keyExtractor={item => item.link} horizontal data={watchHistory} renderItem={renderItem} contentContainerStyle={{ paddingRight: 30 }} />
 
                 </View>
             </View>

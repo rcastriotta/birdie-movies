@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, SafeAreaView, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import GetVideoData from './GetVideoData';
-import GetVideo from './GetVideo';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useDispatch } from 'react-redux'
 import * as stateActions from '../../store/actions/state';
@@ -11,8 +10,6 @@ import ShowPicker from './ShowPicker';
 
 const ShowDataScreen = ({ route, navigation }) => {
     const [data, setData] = useState(null)
-    const [streamURL, setStreamURL] = useState(false)
-    const [showVideo, setShowVideo] = useState(false)
     const [currentEpisode, setCurrentEpisode] = useState(route.params.episode)
     const [currentTime, setCurrentTime] = useState(route.params.watchData)
     const dispatch = useDispatch()
@@ -30,21 +27,11 @@ const ShowDataScreen = ({ route, navigation }) => {
         }
     }, [currentTime])
 
-    const start = () => {
-        if (streamURL) {
-            setShowVideo(false)
-            setTimeout(() => {
-                setShowVideo(true)
-            }, 1000)
-        }
-    }
-
     const reset = (link) => {
         // only resets time if new episode is pressed
         if (!currentEpisode || currentEpisode.link !== link) {
             setCurrentTime([0, 0])
         }
-        setStreamURL(null)
     }
 
     return (
@@ -93,13 +80,9 @@ const ShowDataScreen = ({ route, navigation }) => {
                     </View>
 
                 </SafeAreaView>
-                {data && <ShowPicker data={data[0]} setCurrentEpisode={(ep) => setCurrentEpisode(ep)} reset={reset} setStreamURL={(value) => setStreamURL(value)} />}
+                {data && <ShowPicker currentTime={currentTime} reset={reset} setCurrentTime={(time) => setCurrentTime(time)} data={data[0]} setCurrentEpisode={(ep) => setCurrentEpisode(ep)} reset={reset} />}
             </ScrollView>
-
-
-            {streamURL && <GetVideo play={showVideo} currentTime={currentTime} reset={reset} setCurrentTime={(time) => setCurrentTime(time)} url={streamURL} />}
             {!data && <GetVideoData link={route.params.link} setData={(arr) => setData(arr)} />}
-
         </React.Fragment>
     )
 }
